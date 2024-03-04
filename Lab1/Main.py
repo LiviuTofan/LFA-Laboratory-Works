@@ -29,7 +29,7 @@ for state, transitions in finite_automaton_instance.delta.items():
         print(f"({state}, {symbol}) -> {result_state}")
 
 # Point D: check if the word can be obtained
-input_string = "FAF-223"
+input_string = "bdaaab"
 result = finite_automaton_instance.word_belongs_to_language(input_string)
 
 print(f"\nThe string '{input_string}' belongs to the language: {result}")
