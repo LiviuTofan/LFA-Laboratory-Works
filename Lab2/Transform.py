@@ -1,55 +1,44 @@
-from NFA import NFA
-from DFA import DFA
+def fa_to_regular_grammar(variant):
+    grammar = {}
 
-class TransformNFAtoDFA:
-    def __init__(self, Q, Sigma, F, delta):
-        self.nfa = NFA(Q, Sigma, F, delta)
+    states = variant["Q"]
+    transitions = variant["delta"]
+    alphabet = variant["Sigma"]
 
-    def epsilon_closure(self, states):
-        closure = set(states)
-        stack = list(states)
+    for state in states:
+        rules = []
+        for symbol in alphabet:
+            for transition in transitions:
+                if state in transition and symbol in transition[state]:
+                    destination = transition[state][symbol]
+                    rules.append(f'{symbol}{destination}')
+        grammar[state] = rules
 
-        while stack:
-            current_state = stack.pop()
-            epsilon_transitions = self.nfa.transition_table.get(current_state, {}).get('', [])
-            for state in epsilon_transitions:
-                if state not in closure:
-                    closure.add(state)
-                    stack.append(state)
+    return grammar
 
-        return sorted(list(closure))
 
-    def nfa_to_dfa(self) -> DFA:
-        dfa_Q = set()
-        dfa_Sigma = self.nfa.Sigma
-        dfa_delta = {}
+def ndfa_to_dfa(variant):
+    dfa = {}
 
-        start_state = self.epsilon_closure({'q0'})
-        if start_state:
-            dfa_Q.add(tuple(start_state))
-            stack = [tuple(start_state)]
-        else:
-            stack = []
+    dfa["input_symbols"] = variant["Sigma"]
+    unprocessed_states = [frozenset([variant["Q"][0]])]
+    dfa["start_state"] = frozenset([variant["Q"][0]])
+    dfa["states"] = set()
+    dfa["transitions"] = {}
+    dfa["accept_states"] = set()
 
-        while stack:
-            current_states = stack.pop()
-            dfa_delta[current_states] = {}
+    while unprocessed_states:
+        current_state = unprocessed_states.pop()
+        if current_state not in dfa["states"]:
+            dfa["states"].add(current_state)
+            for input_symbol in dfa["input_symbols"]:
+                next_state = frozenset(
+                    [s for state in current_state for s in
+                     [t[state][input_symbol] for t in variant["delta"] if state in t and input_symbol in t[state]]])
+                if next_state:
+                    dfa["transitions"][current_state, input_symbol] = next_state
+                    unprocessed_states.append(next_state)
 
-            for symbol in dfa_Sigma:
-                next_states = []
+    dfa["accept_states"] = {state for state in dfa["states"] if variant["F"][0] in state}
 
-                for state in current_states:
-                    transitions = self.nfa.transition_table.get(state, {}).get(symbol, [])
-                    next_states.extend(transitions)
-
-                epsilon_closure_result = self.epsilon_closure(next_states)
-                if epsilon_closure_result:
-                    state_key = tuple(epsilon_closure_result)
-
-                    if state_key not in dfa_Q:
-                        dfa_Q.add(state_key)
-                        stack.append(state_key)
-
-                    dfa_delta[current_states][symbol] = state_key
-
-        return DFA(dfa_Q, dfa_Sigma, self.nfa.F, dfa_delta)
+    return dfa
