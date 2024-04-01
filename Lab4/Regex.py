@@ -52,7 +52,7 @@ def find_chooses(regex):
                 index = len(substring) + 2
                 substring = substring.replace("|", "")
                 matches.extend(substring)
-                return matches, index
+    return matches, index
 
 def find_operators(regex):
     num = ""
