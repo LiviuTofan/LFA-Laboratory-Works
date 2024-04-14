@@ -29,7 +29,7 @@ def star(symbol: str):
 
 def power(symbol: str, n: int):
     repeated_symbol = ""
-    for i in range(0, n-1):
+    for i in range(0, n):
         repeated_symbol += symbol
     print(f'Repeat {symbol} {n} times')
     return repeated_symbol
@@ -41,18 +41,21 @@ def const(symbol: str):
 
 def find_chooses(regex):
     stack = []
+    matches = []
+    index = 0
     for i, char in enumerate(regex):
         if char == "(":
             stack.append(i)
         elif char == ")":
             if stack:
-                matches = []
                 start_index = stack.pop()
                 substring = regex[start_index + 1:i]
-                index = len(substring) + 2
-                substring = substring.replace("|", "")
+                substring = substring.split("|")  # Splitting choices
                 matches.extend(substring)
+                index = i + 1
+                break  # Exit the loop after finding the first choose operation
     return matches, index
+
 
 def find_operators(regex):
     num = ""
@@ -101,7 +104,7 @@ def find_operators(regex):
 
     return result
 
-regexes = ["(S|T)(U|V)W*Y+24", "L(M|N)O^3P*Q(2|3)", "L(M|N)O^3P*Q(2|3)"]
+regexes = ["(S|T)(U|V)W*Y+24", "L(M|N)O^3P*Q(2|3)", "R*S(T|U|V)W(X|Y|Z)^2"]
 for regex in regexes:
     print("------------")
     print("Regex: ", regex)
